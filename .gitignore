@@ -1,0 +1,19 @@
+# Python environment
+.venv/
+venv/
+
+# PyCharm
+.idea/
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Datasets and model checkpoints
+data/
+checkpoints/
+*.pth
+*.pt
