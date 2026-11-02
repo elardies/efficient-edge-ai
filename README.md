@@ -25,28 +25,60 @@ inference on resource-constrained devices.
 
 ## Current Status
 
-### Development Progress
-
 ### Phase 1: PyTorch Foundations
 
-**Status: In progress**
+**Status: Completed — November 2, 2026**
 
 Completed:
 - Set up the Python development environment with PyTorch.
-- Learned tensor operations and automatic differentiation (autograd).
+- Practiced tensor operations and automatic differentiation (autograd).
 - Implemented gradient descent manually using PyTorch.
 - Built and trained a multilayer perceptron (MLP) using `torch.nn`.
 - Used Mean Squared Error (MSE) and the Adam optimizer.
-- Trained the network for 500 epochs to approximate the function \(y = 3x + 2\).
-- Achieved a final training MSE of approximately **0.0163**.
+- Implemented reproducible training, validation, and test splits.
+- Evaluated the trained network on held-out observations.
+- Practiced inference using a trained model.
 
-The introductory exercises are available in the `learning/` directory.
+### Training and Evaluation
 
-### Next Steps
+As an introductory exercise, a 1–8–1 multilayer perceptron was trained to approximate the function \(y = 3x + 2\).
 
-- Understand training, validation, and test datasets.
-- Implement a baseline convolutional neural network (CNN) on CIFAR-10.
-- Compare the baseline against MobileNetV3.
-- Evaluate accuracy, model size, and inference latency.
-- Investigate model compression techniques for efficient edge deployment.
+**Experimental setup:**
+- Dataset: 100 synthetic observations.
+- Split: 70 training, 15 validation, and 15 test samples.
+- Optimizer: Adam (learning rate = 0.01).
+- Loss function: Mean Squared Error (MSE).
+- Training duration: 500 epochs.
 
+**Results:**
+
+| Dataset | MSE |
+|---|---:|
+| Training | 0.01986 |
+| Validation | 0.02577 |
+| Test | 0.01769 |
+
+The model achieved low prediction errors on both training and held-out data, suggesting that it learned to approximate the underlying relationship.
+
+These experiments are introductory PyTorch exercises and are separate from the main Efficient Edge AI benchmarks.
+
+The code is available in the `learning/` directory.
+
+### Phase 2: CNN Baseline on CIFAR-10
+
+**Status: Not started**
+
+Next steps:
+- Load and explore the CIFAR-10 dataset using PyTorch.
+- Understand `Dataset` and `DataLoader`.
+- Implement and train a baseline convolutional neural network (CNN).
+- Evaluate training and validation performance.
+- Record accuracy and loss curves.
+- Prepare for comparison against MobileNetV3.
+
+### Future Experiments
+
+- Compare the baseline CNN against MobileNetV3.
+- Investigate model compression techniques.
+- Benchmark model size and inference latency.
+- Analyze the trade-offs between accuracy and computational efficiency.
