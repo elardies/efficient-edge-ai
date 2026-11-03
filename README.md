@@ -66,19 +66,48 @@ The code is available in the `learning/` directory.
 
 ### Phase 2: CNN Baseline on CIFAR-10
 
-**Status: Not started**
+A lightweight convolutional neural network was implemented in PyTorch to establish a baseline for image classification before evaluating more efficient architectures such as MobileNetV3.
 
-Next steps:
-- Load and explore the CIFAR-10 dataset using PyTorch.
-- Understand `Dataset` and `DataLoader`.
-- Implement and train a baseline convolutional neural network (CNN).
-- Evaluate training and validation performance.
-- Record accuracy and loss curves.
-- Prepare for comparison against MobileNetV3.
+### Architecture
 
-### Future Experiments
+- Two convolutional layers with 16 and 32 output channels
+- ReLU activations and 2×2 max pooling
+- Flatten layer and fully connected classifier with 10 outputs
 
-- Compare the baseline CNN against MobileNetV3.
-- Investigate model compression techniques.
-- Benchmark model size and inference latency.
-- Analyze the trade-offs between accuracy and computational efficiency.
+### Experimental Setup
+
+| Parameter | Value |
+|---|---|
+| Dataset | CIFAR-10 |
+| Training images | 40,000 |
+| Validation images | 10,000 |
+| Batch size | 64 |
+| Optimizer | Adam |
+| Learning rate | 0.001 |
+| Loss function | CrossEntropyLoss |
+| Training epochs | 10 |
+| Random seed | 42 |
+
+### Results
+
+The baseline CNN achieved a **best validation accuracy of 66.23% at epoch 9**, with a corresponding validation loss of **0.9736**.
+
+Training loss decreased from 1.6160 to 0.8464 across ten epochs, demonstrating that the network learned useful image representations. Validation accuracy also improved substantially, although a small decrease in accuracy during the final epoch suggests that further training should be monitored for overfitting.
+
+The best-performing model weights were saved locally in `checkpoints/baseline_cnn_best.pth`.
+
+### Learning Curves
+
+![Training and validation loss](figures/baseline_cnn_loss.png)
+
+![Validation accuracy](figures/baseline_cnn_accuracy.png)
+
+### Reproducing the Experiment
+
+Install PyTorch, torchvision, and Matplotlib, then run `experiments/baseline_cnn.py` from the project root with CIFAR-10 downloaded in the `data/` directory.
+
+The experiment uses a fixed random seed and a 40,000/10,000 training-validation split. Model checkpoints and downloaded datasets are excluded from version control.
+
+### Next Steps
+
+Compare the baseline CNN against MobileNetV3 using consistent dataset splits and evaluation procedures, then investigate model compression, inference latency, and memory requirements for edge deployment.
