@@ -13,7 +13,9 @@ __pycache__/
 .DS_Store
 
 # Datasets and model checkpoints
-data/
+data/  $
 checkpoints/
 *.pth
 *.pt
+
+experiments/data/

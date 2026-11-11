@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
+import time
 
 torch.manual_seed(42)
 
@@ -30,7 +31,7 @@ model = SimpleCNN()
 
 
 dataset = datasets.CIFAR10(
-    root="./data",
+    root=str(Path(__file__).resolve().parent / "data"),
     train=True,
     download=False,
     transform=transforms.ToTensor()
@@ -39,7 +40,8 @@ dataset = datasets.CIFAR10(
 
 train_data, val_data = random_split(
     dataset,
-    [40000, 10000])
+    [40000, 10000],
+    generator=torch.Generator().manual_seed(42))
 
 train_loader = DataLoader(
     train_data,
@@ -64,12 +66,19 @@ checkpoint_dir.mkdir(exist_ok=True)
 best_val_accuracy = 0
 best_epoch = 0
 
-epochs = 10
+epochs = 30
+patience = 5
+epochs_without_improvement = 0
+best_val_loss = float("inf")
+saved_val_accuracy = 0
+saved_epoch = 0
+
 
 train_losses = []
 val_losses = []
 val_accuracies = []
 
+start_time = time.perf_counter()
 for epoch in range(epochs):
 
     # TRAINING
@@ -112,10 +121,18 @@ for epoch in range(epochs):
         best_val_accuracy = val_accuracy
         best_epoch = epoch + 1
 
+    if avg_val_loss < best_val_loss:
+        best_val_loss = avg_val_loss
+        epochs_without_improvement = 0
+        saved_val_accuracy = val_accuracy
+        saved_epoch = epoch + 1
+
         torch.save(
             model.state_dict(),
             checkpoint_dir / "baseline_cnn_best.pth"
         )
+    else:
+        epochs_without_improvement += 1
 
     val_losses.append(avg_val_loss)
     val_accuracies.append(val_accuracy)
@@ -126,5 +143,35 @@ for epoch in range(epochs):
         f"Val loss: {avg_val_loss:.4f} | "
         f"Val accuracy: {val_accuracy:.2f}%")
 
+    if epochs_without_improvement >= patience:
+        print("Early stopping triggered.")
+        break
+
+training_time = time.perf_counter() - start_time
+print(f"Training time: {training_time:.2f} seconds")
+
 print(f"Best validation accuracy: {best_val_accuracy:.2f}%")
 print(f"Best epoch: {best_epoch}")
+
+print(f"Saved checkpoint epoch: {saved_epoch}")
+print(f"Saved checkpoint accuracy: {saved_val_accuracy:.2f}%")
+
+import json
+
+results = {
+    "train_losses": train_losses,
+    "val_losses": val_losses,
+    "val_accuracies": val_accuracies,
+    "best_val_accuracy": best_val_accuracy,
+    "best_epoch": best_epoch,
+    "saved_val_accuracy": saved_val_accuracy,
+    "saved_epoch": saved_epoch,
+    "training_time_seconds": training_time,
+    "epochs_completed": len(train_losses)
+}
+
+results_dir = Path(__file__).resolve().parent.parent / "results"
+results_dir.mkdir(exist_ok=True)
+
+with open(results_dir / "baseline_cnn_results.json", "w") as f:
+    json.dump(results, f, indent=4)

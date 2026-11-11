@@ -1,52 +1,140 @@
-
 from pathlib import Path
+import json
 import matplotlib.pyplot as plt
 
-# Results from our completed 10-epoch experiment
-train_losses = [
-    1.6160, 1.3217, 1.1925, 1.0931, 1.0256,
-    0.9699, 0.9328, 0.8960, 0.8715, 0.8464
-]
-
-val_losses = [
-    1.3947, 1.2996, 1.1756, 1.1148, 1.0554,
-    1.0385, 1.0083, 1.0102, 0.9736, 0.9894
-]
-
-val_accuracies = [
-    51.02, 54.46, 58.79, 60.93, 63.32,
-    63.72, 65.10, 65.10, 66.23, 66.01
-]
-
-epochs = range(1, 11)
-
-# Create figures folder at project root
-figures_dir = Path(__file__).resolve().parent.parent / "figures"
+# PROJECT FOLDERS
+project_dir = Path(__file__).resolve().parent.parent
+results_dir = project_dir / "results"
+figures_dir = project_dir / "figures"
 figures_dir.mkdir(exist_ok=True)
 
-# Plot training and validation loss
-plt.figure(figsize=(8, 5))
-plt.plot(epochs, train_losses, marker="o", label="Training loss")
-plt.plot(epochs, val_losses, marker="o", label="Validation loss")
+
+# LOAD RESULTS
+def load_results(filename):
+    with open(results_dir / filename, "r") as f:
+        return json.load(f)
+
+
+baseline = load_results("baseline_cnn_results.json")
+original = load_results("mobilenet_v3_lr001_results.json")
+lower_lr = load_results("mobilenet_v3_lr0001_results.json")
+scheduler = load_results("mobilenet_v3_scheduler_results.json")
+
+
+# PLOT FUNCTION
+def plot_metric(experiments, metric, title, ylabel, filename):
+    plt.figure(figsize=(9, 5))
+
+    for name, results in experiments.items():
+        values = results[metric]
+        epochs = range(1, len(values) + 1)
+
+        plt.plot(epochs, values, label=name, linewidth=2)
+
+    plt.xlabel("Epoch")
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(figures_dir / filename, dpi=150)
+    plt.close()
+
+
+# 1. BASELINE VS SELECTED MOBILENETV3
+main_experiments = {
+    "SimpleCNN": baseline,
+    "MobileNetV3 (LR 0.001)": original
+}
+
+plot_metric(
+    main_experiments,
+    "train_losses",
+    "SimpleCNN vs MobileNetV3 - Training Loss",
+    "Cross-entropy loss",
+    "model_training_loss.png"
+)
+
+plot_metric(
+    main_experiments,
+    "val_losses",
+    "SimpleCNN vs MobileNetV3 - Validation Loss",
+    "Cross-entropy loss",
+    "model_validation_loss.png"
+)
+
+plot_metric(
+    main_experiments,
+    "val_accuracies",
+    "SimpleCNN vs MobileNetV3 - Validation Accuracy",
+    "Validation accuracy (%)",
+    "model_validation_accuracy.png"
+)
+
+
+# 2. MOBILENETV3 HYPERPARAMETER EXPERIMENTS
+mobilenet_experiments = {
+    "LR 0.001": original,
+    "LR 0.0001": lower_lr,
+    "LR scheduler": scheduler
+}
+
+plot_metric(
+    mobilenet_experiments,
+    "train_losses",
+    "MobileNetV3 - Training Loss Comparison",
+    "Cross-entropy loss",
+    "mobilenet_training_loss.png"
+)
+
+plot_metric(
+    mobilenet_experiments,
+    "val_losses",
+    "MobileNetV3 - Validation Loss Comparison",
+    "Cross-entropy loss",
+    "mobilenet_validation_loss.png"
+)
+
+plot_metric(
+    mobilenet_experiments,
+    "val_accuracies",
+    "MobileNetV3 - Validation Accuracy Comparison",
+    "Validation accuracy (%)",
+    "mobilenet_validation_accuracy.png"
+)
+
+
+# 3. LEARNING RATE SCHEDULE
+plt.figure(figsize=(9, 5))
+
+epochs = range(1, len(scheduler["learning_rates"]) + 1)
+
+plt.step(
+    epochs,
+    scheduler["learning_rates"],
+    where="mid",
+    linewidth=2
+)
+
 plt.xlabel("Epoch")
-plt.ylabel("Cross-entropy loss")
-plt.title("Baseline CNN - CIFAR-10 Loss")
-plt.legend()
-plt.grid(True)
+plt.ylabel("Learning rate")
+plt.title("MobileNetV3 - Learning Rate Schedule")
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig(figures_dir / "baseline_cnn_loss.png", dpi=150)
+plt.savefig(figures_dir / "mobilenet_learning_rate.png", dpi=150)
 plt.close()
 
-# Plot validation accuracy
-plt.figure(figsize=(8, 5))
-plt.plot(epochs, val_accuracies, marker="o")
-plt.xlabel("Epoch")
-plt.ylabel("Validation accuracy (%)")
-plt.title("Baseline CNN - CIFAR-10 Accuracy")
-plt.grid(True)
-plt.tight_layout()
-plt.savefig(figures_dir / "baseline_cnn_accuracy.png", dpi=150)
-plt.close()
 
-print("Both graphs saved successfully!")
-print("Best validation accuracy: 66.23% (epoch 9)")
+# SUMMARY
+print("All 7 figures saved in:", figures_dir)
+print()
+print("Saved checkpoint validation accuracies:")
+
+for name, results in {
+    "SimpleCNN": baseline,
+    "MobileNetV3 original": original,
+    "MobileNetV3 lower LR": lower_lr,
+    "MobileNetV3 scheduler": scheduler
+}.items():
+    print(f"{name}: {results['saved_val_accuracy']:.2f}%")
+
